@@ -2,7 +2,9 @@
 // const puppeteer = require("puppeteer");
 const path = require("path")
 const ShortUniqueId = require('short-unique-id');
-import chromium from 'chrome-aws-lambda';
+// import chromium from 'chrome-aws-lambda';
+import chrome from 'chrome-aws-lambda';
+import puppeteer from 'puppeteer-core';
 
 export default async function handler(req ,res ){
   console.log("------------------------------------------------")
@@ -10,13 +12,29 @@ export default async function handler(req ,res ){
   const pdfPath = path.join(__dirname , "../../../../src/public/pdf" , `employee-schedule${uid()}.pdf`);
   try {
     // const browser = await puppeteer.launch({ headless: true    });
-    const browser = await chromium.puppeteer.launch({
+    const options = process.env.AWS_REGION
+    ? {
+        args: chrome.args,
+        executablePath: await chrome.executablePath,
+        headless: chrome.headless
+      }
+    : {
+        args: [],
+        executablePath:
+          process.platform === 'win32'
+            ? 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+            : process.platform === 'linux'
+            ? '/usr/bin/google-chrome'
+            : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+      };
+    /* const browser = await chromium.puppeteer.launch({
       args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
-    })
+    }) */
+    const browser = await puppeteer.launch(options);
     const page = await browser.newPage();
     // await page.goto("http://localhost:3500")
     // const content = await compiler("index", data);
